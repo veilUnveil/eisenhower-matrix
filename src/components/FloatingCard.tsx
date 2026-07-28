@@ -46,9 +46,9 @@ interface FloatingCardProps {
     id: number,
     data: { name: string; description: string; dueDate: string | null }
   ) => Promise<void>;
-  onComplete: (id: number) => Promise<void>;
   onDelete: (id: number) => void;
   onRequestDelete: (id: number) => void;
+  onRequestComplete: (id: number) => void;
 }
 
 export function FloatingCard({
@@ -56,9 +56,9 @@ export function FloatingCard({
   boardRef,
   onMove,
   onUpdate,
-  onComplete,
   onDelete,
   onRequestDelete,
+  onRequestComplete,
 }: FloatingCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: task.x, y: task.y });
@@ -137,26 +137,33 @@ export function FloatingCard({
             : "z-10 cursor-pointer transition-[left,top,transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:z-20 hover:-translate-y-[calc(50%+2px)] hover:shadow-xl"
         )}
       >
-        {/* The quadrant-coloured dot becomes a check affordance on card hover. */}
+        {/* The quadrant-coloured dot becomes a check affordance only once the
+            pointer is actually over the dot (not just anywhere on the card). */}
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => setDetailOpen(true)}
-          aria-label={`Open ${task.name} to complete it`}
+          onClick={() => onRequestComplete(task.id)}
+          aria-label={`Mark ${task.name} as complete`}
           title="Complete task"
           className="group/complete relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-1"
         >
           <span
             className={cn(
+              "absolute inset-0 scale-50 rounded-full bg-black/10 opacity-0 transition-all duration-150",
+              "group-hover/complete:scale-100 group-hover/complete:opacity-100 group-focus-visible/complete:scale-100 group-focus-visible/complete:opacity-100"
+            )}
+          />
+          <span
+            className={cn(
               "absolute h-2.5 w-2.5 rounded-full bg-gradient-to-br transition-all duration-150",
-              "group-hover/card:scale-50 group-hover/card:opacity-0 group-focus-visible/complete:scale-50 group-focus-visible/complete:opacity-0",
+              "group-hover/complete:scale-50 group-hover/complete:opacity-0 group-focus-visible/complete:scale-50 group-focus-visible/complete:opacity-0",
               meta.gradient
             )}
           />
           <Check
             className={cn(
-              "pointer-events-none absolute h-4 w-4 scale-75 stroke-[3] opacity-0 transition-all duration-150",
-              "group-hover/card:scale-100 group-hover/card:opacity-100 group-focus-visible/complete:scale-100 group-focus-visible/complete:opacity-100",
+              "pointer-events-none relative h-4 w-4 scale-75 stroke-[3] opacity-0 transition-all duration-150",
+              "group-hover/complete:scale-100 group-hover/complete:opacity-100 group-focus-visible/complete:scale-100 group-focus-visible/complete:opacity-100",
               meta.check
             )}
           />
@@ -222,7 +229,7 @@ export function FloatingCard({
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onUpdate={onUpdate}
-        onComplete={onComplete}
+        onRequestComplete={onRequestComplete}
         onDelete={onDelete}
       />
 

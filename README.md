@@ -6,6 +6,8 @@ them, hover a card to read its description, and manage everything from one page.
 
 ![four quadrants: Do First, Schedule, Delegate, Eliminate](https://img.shields.io/badge/quadrants-4-7c3aed)
 
+![Eisenhower Matrix board with sample tasks in all four quadrants](docs/screenshot.png)
+
 ## ✨ Features
 
 - **One big board** — a single pane split into four colour-coded regions
@@ -20,17 +22,19 @@ them, hover a card to read its description, and manage everything from one page.
   the name, description and due date, plus an option to complete it.
 - **Completion history** — completed tasks leave the matrix but stay in SQLite
   with their completion date. View them beside **New Task** and filter the list
-  with buttons for all time, 7 days, 14 days, or one month. Completed tasks can
-  be reactivated and returned to their previous matrix position.
+  with buttons for all time, 7 days, 14 days, or one month. Click a completed
+  task to see its full description and due date, and reactivate it back to its
+  previous matrix position.
 - **Quick completion cue** — the coloured dot on a task becomes a matching
-  coloured check control on hover; click it to open the task and complete it.
+  coloured check control on hover; click it to confirm and complete the task
+  without opening the detail view.
 - **Hover to read** — the full name, optional **due date** and description appear as
   a floating tooltip, without nudging the card out of place.
 - **Optional due dates** — set one when creating or editing; shown on hover and in
   the detail view.
 - **Create menu** — a friendly dialog with a live "where will it land?" preview.
-- **Delete with confirmation** — click the ✕ in a card's corner (or Delete in the
-  detail view) and confirm.
+- **Confirm before it counts** — completing or deleting a task (from a card or
+  the detail view) always shows a confirmation dialog first.
 - **SQLite persistence** — tasks (name, description, important, urgent, x, y) are
   stored in a local SQLite database; position is the source of truth for the flags.
 

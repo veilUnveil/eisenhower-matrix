@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { CircleCheckBig } from "lucide-react";
 import type { Task } from "@/types";
 import { QUADRANTS } from "@/types";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,20 @@ export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardPr
   const boardRef = useRef<HTMLDivElement>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<number | null>(null);
   const candidateTask = tasks.find((t) => t.id === deleteCandidate);
+  const [completeCandidate, setCompleteCandidate] = useState<number | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const completeCandidateTask = tasks.find((t) => t.id === completeCandidate);
+
+  async function handleConfirmComplete() {
+    if (completeCandidate === null || completing) return;
+    setCompleting(true);
+    try {
+      await onComplete(completeCandidate);
+      setCompleteCandidate(null);
+    } finally {
+      setCompleting(false);
+    }
+  }
 
   return (
     <>
@@ -93,9 +108,9 @@ export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardPr
               boardRef={boardRef}
               onMove={onMove}
               onUpdate={onUpdate}
-              onComplete={onComplete}
               onDelete={onDelete}
               onRequestDelete={setDeleteCandidate}
+              onRequestComplete={setCompleteCandidate}
             />
           ))}
 
@@ -134,6 +149,33 @@ export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardPr
               }}
             >
               Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={completeCandidate !== null}
+        onOpenChange={(open) => { if (!open) setCompleteCandidate(null); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/25">
+              <CircleCheckBig className="h-7 w-7" strokeWidth={2.5} />
+            </div>
+            <DialogTitle className="text-center">Mark this task complete?</DialogTitle>
+            <DialogDescription className="text-center">
+              "{completeCandidateTask?.name}" will move to your completed tasks list.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3">
+            <DialogClose asChild>
+              <Button variant="secondary" className="flex-1" disabled={completing}>
+                Not yet
+              </Button>
+            </DialogClose>
+            <Button className="flex-1" disabled={completing} onClick={handleConfirmComplete}>
+              {completing ? "Completing…" : "Complete"}
             </Button>
           </div>
         </DialogContent>

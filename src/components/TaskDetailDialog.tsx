@@ -22,7 +22,7 @@ interface TaskDetailDialogProps {
     id: number,
     data: { name: string; description: string; dueDate: string | null }
   ) => Promise<void>;
-  onComplete: (id: number) => Promise<void>;
+  onRequestComplete: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
@@ -31,7 +31,7 @@ export function TaskDetailDialog({
   open,
   onOpenChange,
   onUpdate,
-  onComplete,
+  onRequestComplete,
   onDelete,
 }: TaskDetailDialogProps) {
   const [editing, setEditing] = useState(false);
@@ -39,7 +39,6 @@ export function TaskDetailDialog({
   const [description, setDescription] = useState(task.description);
   const [dueDate, setDueDate] = useState(task.dueDate ?? "");
   const [saving, setSaving] = useState(false);
-  const [completing, setCompleting] = useState(false);
 
   // Reset the form whenever the dialog opens (or the task changes underneath it).
   useEffect(() => {
@@ -69,15 +68,9 @@ export function TaskDetailDialog({
     }
   }
 
-  async function handleComplete() {
-    if (completing) return;
-    setCompleting(true);
-    try {
-      await onComplete(task.id);
-      onOpenChange(false);
-    } finally {
-      setCompleting(false);
-    }
+  function handleRequestComplete() {
+    onOpenChange(false);
+    onRequestComplete(task.id);
   }
 
   return (
@@ -197,9 +190,9 @@ export function TaskDetailDialog({
                 <Pencil className="h-4 w-4" />
                 Edit
               </Button>
-              <Button onClick={handleComplete} disabled={completing}>
+              <Button onClick={handleRequestComplete}>
                 <CircleCheckBig className="h-4 w-4" />
-                {completing ? "Completing…" : "Complete"}
+                Complete
               </Button>
             </div>
           </div>
