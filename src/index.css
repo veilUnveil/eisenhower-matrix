@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #fbf7ff;
+  --color-foreground: #2b2440;
+  --color-card: #ffffff;
+  --color-muted: #f2edfb;
+  --color-muted-foreground: #7a7191;
+  --color-border: #e9e2f7;
+  --color-input: #e9e2f7;
+  --color-ring: #a78bfa;
+  --color-primary: #7c3aed;
+  --color-primary-foreground: #ffffff;
+
+  /* Playful quadrant palette */
+  --color-do-from: #ff6b6b;
+  --color-do-to: #ff8e72;
+  --color-schedule-from: #4dabf7;
+  --color-schedule-to: #38d9a9;
+  --color-delegate-from: #ffd43b;
+  --color-delegate-to: #ffa94d;
+  --color-eliminate-from: #b197fc;
+  --color-eliminate-to: #f783ac;
+
+  --radius: 1rem;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #f0e7ff 0%, transparent 55%),
+    radial-gradient(1000px 500px at 110% 10%, #e7fbff 0%, transparent 50%),
+    var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars inside quadrants */
+.quad-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.quad-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+}
+.quad-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.animate-overlay-in {
+  animation: overlay-in 0.18s ease-out;
+}
+.animate-dialog-in {
+  animation: dialog-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

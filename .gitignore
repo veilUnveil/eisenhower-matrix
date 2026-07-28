@@ -1,0 +1,46 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+.vite/
+.cache/
+
+# Local application data
+server/tasks.db
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and temporary files
+*.log
+*-debug.log*
+*.tmp
+*.temp
+*.bak
+
+# Editors and local tooling
+.vscode/
+.idea/
+.history/
+*.code-workspace
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
