@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import { LayoutGrid } from "lucide-react";
-import type { Task } from "@/types";
+import type { Task, TaskStatus } from "@/types";
 import { flagsFromPos } from "@/types";
 import { api } from "@/api";
 import { Board } from "@/components/Board";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { CompletedTasksDialog } from "@/components/CompletedTasksDialog";
+import { ShelvedTasksDialog } from "@/components/ShelvedTasksDialog";
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const activeTasks = tasks.filter((task) => !task.completed);
+  const activeTasks = tasks.filter((task) => !task.completed && task.status === "active");
   const completedTasks = tasks
     .filter((task) => task.completed)
     .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
+  const shelved = (status: TaskStatus) =>
+    tasks
+      .filter((task) => !task.completed && task.status === status)
+      .sort((a, b) => (b.statusChangedAt ?? "").localeCompare(a.statusChangedAt ?? ""));
+  const onHoldTasks = shelved("on_hold");
+  const archivedTasks = shelved("archived");
 
   useEffect(() => {
     api
@@ -70,10 +77,20 @@ export default function App() {
 
   async function handleReactivate(id: number) {
     try {
-      const updated = await api.update(id, { completed: false });
+      const updated = await api.update(id, { completed: false, status: "active" });
       setTasks((prev) => prev.map((task) => (task.id === id ? updated : task)));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not reactivate task");
+      throw e;
+    }
+  }
+
+  async function handleSetStatus(id: number, status: TaskStatus) {
+    try {
+      const updated = await api.update(id, { status });
+      setTasks((prev) => prev.map((task) => (task.id === id ? updated : task)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update task");
       throw e;
     }
   }
@@ -111,6 +128,16 @@ export default function App() {
             tasks={completedTasks}
             onReactivate={handleReactivate}
           />
+          <ShelvedTasksDialog
+            kind="on_hold"
+            tasks={onHoldTasks}
+            onReactivate={handleReactivate}
+          />
+          <ShelvedTasksDialog
+            kind="archived"
+            tasks={archivedTasks}
+            onReactivate={handleReactivate}
+          />
           <CreateTaskDialog onCreate={handleCreate} />
         </div>
       </header>
@@ -132,6 +159,7 @@ export default function App() {
           onMove={handleMove}
           onUpdate={handleUpdate}
           onComplete={handleComplete}
+          onSetStatus={handleSetStatus}
           onDelete={handleDelete}
         />
       )}

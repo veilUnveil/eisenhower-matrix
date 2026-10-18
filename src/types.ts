@@ -1,3 +1,6 @@
+/** "active" tasks are on the board; the other two are shelved out of view. */
+export type TaskStatus = "active" | "on_hold" | "archived";
+
 export interface Task {
   id: number;
   name: string;
@@ -12,6 +15,9 @@ export interface Task {
   completed: boolean;
   /** ISO timestamp set by the server when the task is completed. */
   completedAt: string | null;
+  status: TaskStatus;
+  /** ISO timestamp of the last status change (e.g. when it was archived). */
+  statusChangedAt: string | null;
   createdAt: string;
 }
 

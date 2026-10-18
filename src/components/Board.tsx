@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { CircleCheckBig } from "lucide-react";
-import type { Task } from "@/types";
+import { Archive, CircleCheckBig, PauseCircle } from "lucide-react";
+import type { Task, TaskStatus } from "@/types";
 import { QUADRANTS } from "@/types";
 import { cn } from "@/lib/utils";
 import { FloatingCard } from "./FloatingCard";
@@ -22,16 +22,59 @@ interface BoardProps {
     data: { name: string; description: string; dueDate: string | null }
   ) => Promise<void>;
   onComplete: (id: number) => Promise<void>;
+  onSetStatus: (id: number, status: TaskStatus) => Promise<void>;
   onDelete: (id: number) => void;
 }
 
-export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardProps) {
+export type ShelveStatus = Exclude<TaskStatus, "active">;
+
+const SHELVE_COPY: Record<
+  ShelveStatus,
+  { title: string; body: string; confirm: string; busy: string; badge: string; Icon: typeof Archive }
+> = {
+  on_hold: {
+    title: "Put this task on hold?",
+    body: "will be hidden from the board. You can bring it back any time from “On hold”.",
+    confirm: "Put on hold",
+    busy: "Pausing…",
+    badge: "from-amber-400 to-orange-500 shadow-amber-500/25",
+    Icon: PauseCircle,
+  },
+  archived: {
+    title: "Archive this task?",
+    body: "will be hidden from the board. You can restore it any time from “Archived”.",
+    confirm: "Archive",
+    busy: "Archiving…",
+    badge: "from-slate-400 to-slate-600 shadow-slate-500/25",
+    Icon: Archive,
+  },
+};
+
+export function Board({ tasks, onMove, onUpdate, onComplete, onSetStatus, onDelete }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<number | null>(null);
   const candidateTask = tasks.find((t) => t.id === deleteCandidate);
   const [completeCandidate, setCompleteCandidate] = useState<number | null>(null);
   const [completing, setCompleting] = useState(false);
   const completeCandidateTask = tasks.find((t) => t.id === completeCandidate);
+
+  const [shelveCandidate, setShelveCandidate] = useState<
+    { id: number; status: ShelveStatus } | null
+  >(null);
+  const [shelving, setShelving] = useState(false);
+  const shelveCandidateTask = tasks.find((t) => t.id === shelveCandidate?.id);
+  const shelveCopy = SHELVE_COPY[shelveCandidate?.status ?? "archived"];
+
+  async function handleConfirmShelve() {
+    if (shelveCandidate === null || shelving) return;
+    setShelving(true);
+    try {
+      await onSetStatus(shelveCandidate.id, shelveCandidate.status);
+      setShelveCandidate(null);
+    } finally {
+      setShelving(false);
+    }
+  }
 
   async function handleConfirmComplete() {
     if (completeCandidate === null || completing) return;
@@ -111,6 +154,7 @@ export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardPr
               onDelete={onDelete}
               onRequestDelete={setDeleteCandidate}
               onRequestComplete={setCompleteCandidate}
+              onRequestShelve={(id, status) => setShelveCandidate({ id, status })}
             />
           ))}
 
@@ -176,6 +220,38 @@ export function Board({ tasks, onMove, onUpdate, onComplete, onDelete }: BoardPr
             </DialogClose>
             <Button className="flex-1" disabled={completing} onClick={handleConfirmComplete}>
               {completing ? "Completing…" : "Complete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={shelveCandidate !== null}
+        onOpenChange={(open) => { if (!open) setShelveCandidate(null); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div
+              className={cn(
+                "mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg",
+                shelveCopy.badge
+              )}
+            >
+              <shelveCopy.Icon className="h-7 w-7" strokeWidth={2.5} />
+            </div>
+            <DialogTitle className="text-center">{shelveCopy.title}</DialogTitle>
+            <DialogDescription className="text-center">
+              "{shelveCandidateTask?.name}" {shelveCopy.body}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3">
+            <DialogClose asChild>
+              <Button variant="secondary" className="flex-1" disabled={shelving}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button className="flex-1" disabled={shelving} onClick={handleConfirmShelve}>
+              {shelving ? shelveCopy.busy : shelveCopy.confirm}
             </Button>
           </div>
         </DialogContent>

@@ -67,17 +67,23 @@ to style a task by its current position rather than its stored flags.
 
 **Data flow:** `src/App.tsx` owns all task state (fetched once via `api.list()`
 in `src/api.ts`) and every mutation handler (`handleCreate`, `handleMove`,
-`handleUpdate`, `handleComplete`, `handleReactivate`, `handleDelete`), doing
-optimistic updates with rollback on failure for move/delete. It splits tasks
-into `activeTasks` (→ `Board`) and `completedTasks` (→ `CompletedTasksDialog`)
-and passes handlers down as props — there's no shared client state store.
+`handleUpdate`, `handleComplete`, `handleReactivate`, `handleSetStatus`,
+`handleDelete`), doing optimistic updates with rollback on failure for
+move/delete. It splits tasks into `activeTasks` (not completed and
+`status === "active"` → `Board`), `completedTasks` (→ `CompletedTasksDialog`)
+and the shelved `on_hold` / `archived` lists (→ one `ShelvedTasksDialog` each,
+in the header next to Completed). `handleReactivate` resets both
+`completed: false` and `status: "active"`, so it serves all three lists. It
+passes handlers down as props — there's no shared client state store.
 
 **Confirmation dialogs are centralized in `Board.tsx`**, not in the individual
-card components. `Board` renders exactly one delete-confirmation `Dialog` and
-one complete-confirmation `Dialog`, each keyed off a `deleteCandidate` /
-`completeCandidate` id in local state. `FloatingCard` and `TaskDetailDialog`
+card components. `Board` renders exactly one delete-confirmation `Dialog`,
+one complete-confirmation `Dialog` and one shelve (on hold / archive)
+confirmation `Dialog`, keyed off `deleteCandidate` / `completeCandidate` ids
+and a `shelveCandidate` `{ id, status }` in local state. `FloatingCard` and `TaskDetailDialog`
 never call `onDelete`/`onComplete` directly for user-initiated actions — they
-call `onRequestDelete(id)` / `onRequestComplete(id)`, which just sets the
+call `onRequestDelete(id)` / `onRequestComplete(id)` /
+`onRequestShelve(id, status)`, which just sets the
 candidate id on `Board` and lets its dialog take over (closing their own
 dialog first, in `TaskDetailDialog`'s case). When adding a new destructive or
 significant action, prefer threading it through this same request/candidate
@@ -93,7 +99,9 @@ tile's lift/shadow/tooltip) — easy to regress if the two group names get
 merged.
 
 **Server** (`server/index.js`): Express serves `dist/` as static files and
-exposes `/api/tasks` (GET/POST) and `/api/tasks/:id` (PATCH/DELETE). All
+exposes `/api/tasks` (GET/POST) and `/api/tasks/:id` (PATCH/DELETE). PATCH
+accepts `status` (`active` | `on_hold` | `archived`, see `STATUSES` in
+`db.js`); `db.js` stamps `status_changed_at` whenever it changes. All
 validation lives in the route handlers; `server/db.js` does the SQLite work
 and re-derives `important`/`urgent` from `x`/`y` on every write, and sets/clears
 `completed_at` based on the `completed` boolean. Schema changes use the

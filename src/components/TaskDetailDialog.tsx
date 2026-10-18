@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Calendar, Trash2, CircleCheckBig } from "lucide-react";
+import { Pencil, Calendar, Trash2, CircleCheckBig, PauseCircle, Archive } from "lucide-react";
 import type { Task } from "@/types";
 import { metaFromPos } from "@/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Linkified } from "./Linkified";
+import type { ShelveStatus } from "./Board";
 
 interface TaskDetailDialogProps {
   task: Task;
@@ -23,6 +24,7 @@ interface TaskDetailDialogProps {
     data: { name: string; description: string; dueDate: string | null }
   ) => Promise<void>;
   onRequestComplete: (id: number) => void;
+  onRequestShelve: (id: number, status: ShelveStatus) => void;
   onDelete: (id: number) => void;
 }
 
@@ -32,6 +34,7 @@ export function TaskDetailDialog({
   onOpenChange,
   onUpdate,
   onRequestComplete,
+  onRequestShelve,
   onDelete,
 }: TaskDetailDialogProps) {
   const [editing, setEditing] = useState(false);
@@ -71,6 +74,11 @@ export function TaskDetailDialog({
   function handleRequestComplete() {
     onOpenChange(false);
     onRequestComplete(task.id);
+  }
+
+  function handleRequestShelve(status: ShelveStatus) {
+    onOpenChange(false);
+    onRequestShelve(task.id, status);
   }
 
   return (
@@ -171,6 +179,27 @@ export function TaskDetailDialog({
               ) : (
                 <span className="text-[var(--color-muted-foreground)]">No due date</span>
               )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => handleRequestShelve("on_hold")}
+              >
+                <PauseCircle className="h-4 w-4" />
+                Put on hold
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => handleRequestShelve("archived")}
+              >
+                <Archive className="h-4 w-4" />
+                Archive
+              </Button>
             </div>
 
             <div className="mt-1 flex gap-3">

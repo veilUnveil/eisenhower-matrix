@@ -5,6 +5,7 @@ import { metaFromPos } from "@/types";
 import { cn, formatDate, truncate } from "@/lib/utils";
 import { Linkified } from "./Linkified";
 import { TaskDetailDialog } from "./TaskDetailDialog";
+import type { ShelveStatus } from "./Board";
 
 /** Gap (px) kept between a card and the dividing lines / board edges. */
 const GUTTER = 14;
@@ -49,6 +50,7 @@ interface FloatingCardProps {
   onDelete: (id: number) => void;
   onRequestDelete: (id: number) => void;
   onRequestComplete: (id: number) => void;
+  onRequestShelve: (id: number, status: ShelveStatus) => void;
 }
 
 export function FloatingCard({
@@ -59,6 +61,7 @@ export function FloatingCard({
   onDelete,
   onRequestDelete,
   onRequestComplete,
+  onRequestShelve,
 }: FloatingCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: task.x, y: task.y });
@@ -230,6 +233,7 @@ export function FloatingCard({
         onOpenChange={setDetailOpen}
         onUpdate={onUpdate}
         onRequestComplete={onRequestComplete}
+        onRequestShelve={onRequestShelve}
         onDelete={onDelete}
       />
 

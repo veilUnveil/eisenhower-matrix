@@ -29,7 +29,7 @@ export const api = {
 
   update: (
     id: number,
-    data: Partial<Omit<Task, "id" | "createdAt" | "completedAt">>
+    data: Partial<Omit<Task, "id" | "createdAt" | "completedAt" | "statusChangedAt">>
   ) =>
     fetch(`/api/tasks/${id}`, {
       method: "PATCH",

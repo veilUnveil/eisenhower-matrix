@@ -17,6 +17,8 @@ db.exec(`
     due_date    TEXT,
     completed   INTEGER NOT NULL DEFAULT 0,
     completed_at TEXT,
+    status      TEXT    NOT NULL DEFAULT 'active',
+    status_changed_at TEXT,
     created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 `);
@@ -32,6 +34,15 @@ if (!columns.includes("completed")) {
 if (!columns.includes("completed_at")) {
   db.exec("ALTER TABLE tasks ADD COLUMN completed_at TEXT");
 }
+if (!columns.includes("status")) {
+  db.exec("ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+}
+if (!columns.includes("status_changed_at")) {
+  db.exec("ALTER TABLE tasks ADD COLUMN status_changed_at TEXT");
+}
+
+// "active" tasks live on the board; "on_hold" / "archived" are shelved out of view.
+export const STATUSES = ["active", "on_hold", "archived"];
 
 // The board's axes: left half = Urgent, top half = Important.
 // Position is the source of truth; the booleans are derived from it.
@@ -67,6 +78,8 @@ const toTask = (row) => ({
   dueDate: row.due_date ?? null,
   completed: !!row.completed,
   completedAt: row.completed_at ?? null,
+  status: STATUSES.includes(row.status) ? row.status : "active",
+  statusChangedAt: row.status_changed_at ?? null,
   createdAt: row.created_at,
 });
 
@@ -104,8 +117,11 @@ export const updateTask = (id, fields) => {
   } else if (!next.completed) {
     next.completedAt = null;
   }
+  if (next.status !== current.status) {
+    next.statusChangedAt = new Date().toISOString();
+  }
   db.prepare(
-    "UPDATE tasks SET name = ?, description = ?, important = ?, urgent = ?, x = ?, y = ?, due_date = ?, completed = ?, completed_at = ? WHERE id = ?"
+    "UPDATE tasks SET name = ?, description = ?, important = ?, urgent = ?, x = ?, y = ?, due_date = ?, completed = ?, completed_at = ?, status = ?, status_changed_at = ? WHERE id = ?"
   ).run(
     next.name,
     next.description,
@@ -116,6 +132,8 @@ export const updateTask = (id, fields) => {
     next.dueDate || null,
     next.completed ? 1 : 0,
     next.completedAt,
+    next.status,
+    next.statusChangedAt,
     id
   );
   return getTask(id);

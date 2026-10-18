@@ -1,7 +1,7 @@
 import express from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { listTasks, createTask, updateTask, deleteTask } from "./db.js";
+import { listTasks, createTask, updateTask, deleteTask, STATUSES } from "./db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -32,7 +32,7 @@ app.post("/api/tasks", (req, res) => {
 
 app.patch("/api/tasks/:id", (req, res) => {
   const id = Number(req.params.id);
-  const { name, description, x, y, dueDate, completed } = req.body ?? {};
+  const { name, description, x, y, dueDate, completed, status } = req.body ?? {};
   const fields = {};
   if (name !== undefined) fields.name = String(name).trim();
   if (description !== undefined) fields.description = String(description).trim();
@@ -40,6 +40,12 @@ app.patch("/api/tasks/:id", (req, res) => {
   if (typeof y === "number") fields.y = y;
   if (dueDate !== undefined) fields.dueDate = dueDate ? String(dueDate) : null;
   if (typeof completed === "boolean") fields.completed = completed;
+  if (status !== undefined) {
+    if (!STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Status must be one of: ${STATUSES.join(", ")}.` });
+    }
+    fields.status = status;
+  }
 
   if (fields.name !== undefined && !fields.name) {
     return res.status(400).json({ error: "Task name is required." });
